@@ -297,6 +297,8 @@
 
   <script>
     const cityLabel = "Registro/SP";
+    const registroCoords = { latitude: -24.4979, longitude: -47.8449 };
+    const cacheKey = "clima_registro_sp_cache_v1";
     const weatherCodeMap = {
       0: ["Céu limpo", "☀️"],
       1: ["Predominantemente limpo", "🌤️"],
@@ -341,40 +343,83 @@
       el.rain.classList.toggle("show", rainCodes.includes(weatherCode));
     }
 
-    async function getWeather() {
+    function formatHour(timestamp) {
+      return new Date(timestamp).toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function renderWeather(current, options = {}) {
+      const { cached = false, timestamp = Date.now() } = options;
+      const [desc, icon] = weatherCodeMap[current.weather_code] || ["Condição desconhecida", "🌍"];
+
+      el.temp.textContent = `${Math.round(current.temperature_2m)}°C`;
+      el.description.textContent = desc;
+      el.icon.textContent = icon;
+      el.feelsLike.textContent = `${Math.round(current.apparent_temperature)}°C`;
+      el.humidity.textContent = `${Math.round(current.relative_humidity_2m)}%`;
+      el.wind.textContent = `${Math.round(current.wind_speed_10m)} km/h`;
+
+      updateRainEffect(current.weather_code);
+      setStatus(cached
+        ? `Dados locais (${formatHour(timestamp)}). Atualizando...`
+        : `Atualizado às ${formatHour(timestamp)} para ${cityLabel}.`);
+    }
+
+    function readCache() {
       try {
-        setStatus("Buscando dados meteorológicos...");
+        const raw = localStorage.getItem(cacheKey);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
 
-        const geoRes = await fetch("https://geocoding-api.open-meteo.com/v1/search?name=Registro&count=1&language=pt&format=json");
-        if (!geoRes.ok) throw new Error("Falha ao localizar a cidade.");
-        const geoData = await geoRes.json();
+    function writeCache(current) {
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({
+          timestamp: Date.now(),
+          current
+        }));
+      } catch {
+        // Ignora erro de armazenamento.
+      }
+    }
 
-        if (!geoData.results || !geoData.results.length) {
-          throw new Error("Cidade não encontrada.");
-        }
+    async function fetchWeather() {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 7000);
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${registroCoords.latitude}&longitude=${registroCoords.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&timezone=America%2FSao_Paulo`;
 
-        const { latitude, longitude } = geoData.results[0];
-
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&timezone=America%2FSao_Paulo`;
-        const weatherRes = await fetch(weatherUrl);
+      try {
+        const weatherRes = await fetch(weatherUrl, { signal: controller.signal });
         if (!weatherRes.ok) throw new Error("Não foi possível carregar o clima.");
         const weatherData = await weatherRes.json();
-        const current = weatherData.current;
-
-        const [desc, icon] = weatherCodeMap[current.weather_code] || ["Condição desconhecida", "🌍"];
-
-        el.temp.textContent = `${Math.round(current.temperature_2m)}°C`;
-        el.description.textContent = desc;
-        el.icon.textContent = icon;
-        el.feelsLike.textContent = `${Math.round(current.apparent_temperature)}°C`;
-        el.humidity.textContent = `${Math.round(current.relative_humidity_2m)}%`;
-        el.wind.textContent = `${Math.round(current.wind_speed_10m)} km/h`;
-
-        updateRainEffect(current.weather_code);
-        setStatus(`Atualizado agora para ${cityLabel}.`);
-      } catch (error) {
-        setStatus(error.message || "Erro ao obter o clima.");
+        return weatherData.current;
+      } finally {
+        clearTimeout(timeout);
       }
+    }
+
+    async function getWeather() {
+      try {
+        const current = await fetchWeather();
+        renderWeather(current);
+        writeCache(current);
+      } catch {
+        setStatus("Sem atualização agora. Exibindo último dado disponível.");
+      }
+    }
+
+    const cachedData = readCache();
+    if (cachedData?.current) {
+      renderWeather(cachedData.current, {
+        cached: true,
+        timestamp: cachedData.timestamp || Date.now()
+      });
+    } else {
+      setStatus("Buscando dados meteorológicos...");
     }
 
     getWeather();
