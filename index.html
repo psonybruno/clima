@@ -107,33 +107,30 @@
     .rain {
       position: absolute;
       inset: 0;
-      background-image:
-        repeating-linear-gradient(
-          -12deg,
-          rgba(255,255,255,0) 0 14px,
-          rgba(255,255,255,0.22) 14px 16px,
-          rgba(255,255,255,0) 16px 28px
-        ),
-        repeating-linear-gradient(
-          -10deg,
-          rgba(255,255,255,0) 0 18px,
-          rgba(255,255,255,0.14) 18px 20px,
-          rgba(255,255,255,0) 20px 36px
-        );
-      background-size: 140px 140px, 180px 180px;
-      background-position: 0 0, 40px 60px;
-      animation: rainFall 0.8s linear infinite;
       opacity: 0;
       transition: opacity 0.5s ease;
+      overflow: hidden;
     }
 
     .rain.show {
-      opacity: 0.22;
+      opacity: 0.28;
     }
 
-    @keyframes rainFall {
-      from { background-position: 0 0, 40px 60px; }
-      to { background-position: -24px 120px, 12px 190px; }
+    .drop {
+      position: absolute;
+      top: -14vh;
+      width: 2px;
+      height: 22px;
+      border-radius: 999px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,.75));
+      transform: rotate(12deg);
+      animation: rainDrop linear infinite;
+      will-change: transform;
+    }
+
+    @keyframes rainDrop {
+      from { transform: translate3d(0, 0, 0) rotate(12deg); }
+      to { transform: translate3d(-26px, 120vh, 0) rotate(12deg); }
     }
 
     .card {
@@ -425,6 +422,23 @@
       if (value >= HIGH_TEMP) target.classList.add("is-hot");
     }
 
+    function initRainDrops(total = 70) {
+      if (el.rain.dataset.ready === "true") return;
+
+      for (let i = 0; i < total; i += 1) {
+        const drop = document.createElement("span");
+        drop.className = "drop";
+        drop.style.left = `${Math.random() * 100}%`;
+        drop.style.height = `${14 + Math.random() * 18}px`;
+        drop.style.opacity = `${0.25 + Math.random() * 0.5}`;
+        drop.style.animationDuration = `${0.55 + Math.random() * 0.7}s`;
+        drop.style.animationDelay = `${Math.random() * -2}s`;
+        el.rain.appendChild(drop);
+      }
+
+      el.rain.dataset.ready = "true";
+    }
+
     function renderWeather(current, options = {}) {
       const { cached = false, timestamp = Date.now() } = options;
       const [desc, icon] = weatherCodeMap[current.weather_code] || ["Condição desconhecida", "🌍"];
@@ -490,6 +504,7 @@
     }
 
     const cachedData = readCache();
+    initRainDrops();
     if (cachedData?.current) {
       renderWeather(cachedData.current, {
         cached: true,
