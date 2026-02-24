@@ -198,7 +198,14 @@
       color: var(--text-soft);
       letter-spacing: 0.05em;
       text-transform: capitalize;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+    }
+
+    .full-date {
+      font-size: clamp(.95rem, 2vw, 1.3rem);
+      color: var(--text-soft);
+      letter-spacing: 0.03em;
+      margin-bottom: 8px;
     }
 
     .description {
@@ -301,6 +308,7 @@
     <div class="weather-main">
       <div>
         <div id="dayName" class="day-name">--</div>
+        <div id="fullDate" class="full-date">--</div>
         <div id="clock" class="clock">--:--:--</div>
         <div id="temp" class="temp">--°C</div>
         <p id="description" class="description">Carregando clima...</p>
@@ -358,6 +366,7 @@
 
     const el = {
       dayName: document.getElementById("dayName"),
+      fullDate: document.getElementById("fullDate"),
       clock: document.getElementById("clock"),
       temp: document.getElementById("temp"),
       description: document.getElementById("description"),
@@ -394,6 +403,11 @@
       });
       const day = now.toLocaleDateString("pt-BR", { weekday: "long" });
       el.dayName.textContent = day.charAt(0).toUpperCase() + day.slice(1);
+      el.fullDate.textContent = now.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      });
     }
 
     function applyTemperatureTone(target, value) {
