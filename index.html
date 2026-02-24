@@ -181,6 +181,24 @@
       font-size: clamp(4rem, 14vw, 9rem);
       font-weight: 700;
       line-height: 1;
+      transition: color .4s ease, text-shadow .4s ease;
+    }
+
+    .clock {
+      font-size: clamp(1.6rem, 4vw, 3rem);
+      font-weight: 600;
+      color: #fef9c3;
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+      text-shadow: 0 4px 14px rgba(0,0,0,.25);
+    }
+
+    .day-name {
+      font-size: clamp(1rem, 2.4vw, 1.6rem);
+      color: var(--text-soft);
+      letter-spacing: 0.05em;
+      text-transform: capitalize;
+      margin-bottom: 6px;
     }
 
     .description {
@@ -213,6 +231,17 @@
 
     .meta-item strong {
       font-size: clamp(1.4rem, 3.2vw, 2.4rem);
+      transition: color .4s ease, text-shadow .4s ease;
+    }
+
+    .is-cold {
+      color: #93c5fd;
+      text-shadow: 0 0 16px rgba(147, 197, 253, .45);
+    }
+
+    .is-hot {
+      color: #fb923c;
+      text-shadow: 0 0 16px rgba(251, 146, 60, .45);
     }
 
     .status {
@@ -271,6 +300,8 @@
     <p class="city">Registro/SP</p>
     <div class="weather-main">
       <div>
+        <div id="dayName" class="day-name">--</div>
+        <div id="clock" class="clock">--:--:--</div>
         <div id="temp" class="temp">--°C</div>
         <p id="description" class="description">Carregando clima...</p>
       </div>
@@ -299,6 +330,8 @@
     const cityLabel = "Registro/SP";
     const registroCoords = { latitude: -24.4979, longitude: -47.8449 };
     const cacheKey = "clima_registro_sp_cache_v1";
+    const LOW_TEMP = 15;
+    const HIGH_TEMP = 32;
     const weatherCodeMap = {
       0: ["Céu limpo", "☀️"],
       1: ["Predominantemente limpo", "🌤️"],
@@ -324,6 +357,8 @@
     };
 
     const el = {
+      dayName: document.getElementById("dayName"),
+      clock: document.getElementById("clock"),
       temp: document.getElementById("temp"),
       description: document.getElementById("description"),
       icon: document.getElementById("icon"),
@@ -350,6 +385,23 @@
       });
     }
 
+    function updateClock() {
+      const now = new Date();
+      el.clock.textContent = now.toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+      const day = now.toLocaleDateString("pt-BR", { weekday: "long" });
+      el.dayName.textContent = day.charAt(0).toUpperCase() + day.slice(1);
+    }
+
+    function applyTemperatureTone(target, value) {
+      target.classList.remove("is-cold", "is-hot");
+      if (value <= LOW_TEMP) target.classList.add("is-cold");
+      if (value >= HIGH_TEMP) target.classList.add("is-hot");
+    }
+
     function renderWeather(current, options = {}) {
       const { cached = false, timestamp = Date.now() } = options;
       const [desc, icon] = weatherCodeMap[current.weather_code] || ["Condição desconhecida", "🌍"];
@@ -360,6 +412,8 @@
       el.feelsLike.textContent = `${Math.round(current.apparent_temperature)}°C`;
       el.humidity.textContent = `${Math.round(current.relative_humidity_2m)}%`;
       el.wind.textContent = `${Math.round(current.wind_speed_10m)} km/h`;
+      applyTemperatureTone(el.temp, current.temperature_2m);
+      applyTemperatureTone(el.feelsLike, current.apparent_temperature);
 
       updateRainEffect(current.weather_code);
       setStatus(cached
@@ -424,6 +478,8 @@
 
     getWeather();
     setInterval(getWeather, 10 * 60 * 1000);
+    updateClock();
+    setInterval(updateClock, 1000);
   </script>
 </body>
 </html>
