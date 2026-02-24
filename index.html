@@ -30,6 +30,7 @@
       overflow: hidden;
       display: grid;
       place-items: center;
+      padding: 2vh 2vw;
     }
 
     .scene {
@@ -127,14 +128,20 @@
     }
 
     .card {
-      width: min(92vw, 480px);
-      padding: 28px;
-      border-radius: 24px;
+      width: min(92vw, 640px);
+      min-height: min(94vh, 1600px);
+      max-height: 94vh;
+      padding: clamp(20px, 3vw, 34px);
+      border-radius: clamp(20px, 3vw, 30px);
       border: 1px solid var(--card-border);
       background: var(--card);
       backdrop-filter: blur(10px);
       box-shadow: 0 12px 40px rgba(0,0,0,.35);
       animation: riseIn .9s ease both;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 22px;
     }
 
     @keyframes riseIn {
@@ -143,23 +150,24 @@
     }
 
     .city {
-      font-size: 1.05rem;
+      font-size: clamp(1rem, 2vw, 1.4rem);
       letter-spacing: .08em;
       text-transform: uppercase;
       color: var(--text-soft);
-      margin-bottom: 8px;
     }
 
     .weather-main {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 16px;
+      justify-content: center;
+      text-align: center;
+      gap: 16px;
     }
 
     .icon {
-      font-size: 72px;
+      font-size: clamp(88px, 16vw, 170px);
+      order: -1;
       animation: float 3.5s ease-in-out infinite;
       filter: drop-shadow(0 8px 12px rgba(0,0,0,.25));
     }
@@ -170,27 +178,27 @@
     }
 
     .temp {
-      font-size: clamp(2.4rem, 7vw, 4rem);
+      font-size: clamp(4rem, 14vw, 9rem);
       font-weight: 700;
       line-height: 1;
     }
 
     .description {
-      font-size: 1.1rem;
+      font-size: clamp(1.2rem, 3vw, 2rem);
       color: var(--text-soft);
-      margin-bottom: 22px;
+      text-align: center;
       text-transform: capitalize;
     }
 
     .meta {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      grid-template-columns: 1fr;
+      gap: 12px;
     }
 
     .meta-item {
       border-radius: 14px;
-      padding: 12px;
+      padding: 16px;
       background: rgba(255,255,255,0.12);
       text-align: center;
     }
@@ -198,20 +206,56 @@
     .meta-item small {
       display: block;
       color: var(--text-soft);
-      margin-bottom: 4px;
-      font-size: .75rem;
+      margin-bottom: 6px;
+      font-size: clamp(.9rem, 1.8vw, 1.2rem);
       letter-spacing: .04em;
     }
 
     .meta-item strong {
-      font-size: 1rem;
+      font-size: clamp(1.4rem, 3.2vw, 2.4rem);
     }
 
     .status {
-      margin-top: 16px;
-      font-size: .9rem;
+      font-size: clamp(.95rem, 1.6vw, 1.2rem);
       color: #fef9c3;
       min-height: 1.2em;
+      text-align: center;
+    }
+
+    @media (orientation: landscape) {
+      .card {
+        width: min(92vw, 980px);
+        min-height: auto;
+        max-height: none;
+      }
+
+      .weather-main {
+        flex-direction: row;
+        justify-content: space-between;
+        text-align: left;
+      }
+
+      .icon {
+        order: 0;
+      }
+
+      .description {
+        text-align: left;
+      }
+
+      .meta {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-height: 700px) {
+      body {
+        overflow: auto;
+      }
+
+      .card {
+        max-height: none;
+      }
     }
   </style>
 </head>
